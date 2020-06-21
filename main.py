@@ -1,22 +1,48 @@
 import captcha_reader
+import cv2 as cv
+import os
+import sys
 
-url = 'https://rosreestr.ru/wps/portal/p/cc_ib_portal_services/online_request/!ut/p/z1' \
-      '/pZDPCoJAEIefpQeImdks6eBh2cL_imFle5FFSBdKl5AOPX3rA6SH5jbM94P5fiChAtmrt27VqIdePex' \
-      '-k7vaL5wjCYdivyAXechj2pCPWG7hOgvkBPKfvAWmPP4YjhAtAdaAvVKRtiCNGru17u8DVMYeQunWSAE' \
-      'n7rA4P5R75KcNXpKMMUTyxOxfXhY1yoxNpzzrIGc1BVsAppqWPMzzXH2SAHXIV1-6hWlh/p0/IZ7_01H' \
-      'A1A42KODT90AR30VLN22001=CZ6_GQ4E1C41KGQ170AIAK131G00T5=NJcaptcha=/?refresh=true&time=1592737752036'
+url = "http://example.com"
+
+def run_tests():
+    good = 0
+    bad = []
+
+    tests_dir = "test_imgs/"
+    for imgfile in os.listdir(tests_dir):
+        expected = os.path.splitext(imgfile)[0]
+        full_filename = os.path.join(tests_dir, imgfile)
+        actual = captcha_reader.recognize_from_file(full_filename)
+
+        if actual != expected:
+            bad.append(expected)
+            print("Actual: " + actual + ", Expected: " + expected)
+        else:
+            good += 1
+
+    print("Successful: " + str(good) + " \nFailures: " + str(len(bad)) + "\n", bad)
+
+
+def download():
+    cv.namedWindow("img", cv.WINDOW_NORMAL)
+    cv.resizeWindow("img", 520, 144)
+
+    run = True
+    while run:
+        img = captcha_reader._fetch_from_url(url)
+        cv.imshow("img", img)
+        cv.waitKey(1)
+
+        line = sys.stdin.readline()
+        line = line.rstrip()
+        cv.imwrite("test_imgs/%s.png" % line, img)
+        print("Writing %s" % line)
 
 
 def main():
-    run = True
-    while run:
-        text, src_img, split_img = captcha_reader.recognize(url)
-
-        print(text)
-
-        key = captcha_reader.show_images_and_wait_for_key([src_img, split_img])
-        if key == 27:
-            run = False
+    # download()
+    run_tests()
 
 
 if __name__ == '__main__':
